@@ -59,7 +59,7 @@ def get_available_drives():
 @app.route('/')
 def index():
     """List available drives."""
-    drives = get_windows_drives()
+    drives = get_available_drives()
     return render_template_string("""
     <h1>Available Drives</h1>
     <ul>
