@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, send_file, request
+from flask import Flask, render_template_string, send_file, request,url_for,redirect
 import os
 import mimetypes
 from urllib.parse import quote, unquote
@@ -51,14 +51,17 @@ def get_available_drives():
                 drives.append(f'{letter}:\\')
             bitmask >>= 1
         return drives
-    else:
-        return [os.getcwd()]
 
 
 
 @app.route('/')
 def index():
-    """List available drives."""
+    """Redirect to /browse if not Windows, else list drives."""
+    if platform.system() != 'Windows':
+        # Redirect to /browse/, which defaults to os.getcwd()
+        return redirect(url_for('browse_directory'))
+    
+    # Windows: Show drives
     drives = get_available_drives()
     return render_template_string("""
     <h1>Available Drives</h1>
@@ -68,6 +71,7 @@ def index():
         {% endfor %}
     </ul>
     """, drives=drives)
+
 
 @app.route('/browse/', defaults={'subpath': ''})
 @app.route('/browse/<path:subpath>')
