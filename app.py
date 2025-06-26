@@ -33,10 +33,13 @@ def get_directory_contents(path):
     except PermissionError:
         return [], []
 
+import os
+import platform
+
 def get_available_drives():
     """
-    On Windows: return list of drive letters.
-    On Linux: return list of directories under /home.
+    On Windows: return list of available drive letters.
+    On non-Windows: return the current working directory.
     """
     if platform.system() == 'Windows':
         from ctypes import windll
@@ -49,15 +52,7 @@ def get_available_drives():
             bitmask >>= 1
         return drives
     else:
-        # For Linux: list all directories in /home
-        home_root = '/home'
-        if os.path.exists(home_root):
-            return [
-                os.path.join(home_root, d)
-                for d in os.listdir(home_root)
-                if os.path.isdir(os.path.join(home_root, d))
-            ]
-        return []
+        return [os.getcwd()]
 
 
 
