@@ -1,11 +1,9 @@
 from flask import Flask, render_template_string, send_file, request,url_for,redirect
 import os
-import mimetypes
 from urllib.parse import quote, unquote
-import string
 import platform
-import string
 import os
+import re
 app = Flask(__name__)
 
 # Video file extensions
@@ -15,8 +13,12 @@ def is_video_file(filename):
     """Check if file is a video file based on extension."""
     return os.path.splitext(filename.lower())[1] in VIDEO_EXTENSIONS
 
+def natural_key(s):
+    """Sort helper that sorts strings in human order."""
+    return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
+
 def get_directory_contents(path):
-    """Get folders and video files in the given directory."""
+    """Get folders and video files in the given directory, sorted naturally."""
     try:
         items = os.listdir(path)
         folders = []
@@ -27,14 +29,12 @@ def get_directory_contents(path):
                 folders.append(item)
             elif os.path.isfile(item_path) and is_video_file(item):
                 videos.append(item)
-        folders.sort()
-        videos.sort()
+        folders.sort(key=natural_key)
+        videos.sort(key=natural_key)
         return folders, videos
     except PermissionError:
         return [], []
 
-import os
-import platform
 
 def get_available_drives():
     """
