@@ -33,10 +33,11 @@ def get_directory_contents(path):
     except PermissionError:
         return [], []
 
-import psutil
-
 def get_available_drives():
-    """Cross-platform: list Windows drives or Linux mount points."""
+    """
+    On Windows: return list of drive letters.
+    On Linux: return list of directories under /home.
+    """
     if platform.system() == 'Windows':
         from ctypes import windll
         import string
@@ -48,7 +49,15 @@ def get_available_drives():
             bitmask >>= 1
         return drives
     else:
-        return [p.mountpoint for p in psutil.disk_partitions()]
+        # For Linux: list all directories in /home
+        home_root = '/home'
+        if os.path.exists(home_root):
+            return [
+                os.path.join(home_root, d)
+                for d in os.listdir(home_root)
+                if os.path.isdir(os.path.join(home_root, d))
+            ]
+        return []
 
 
 
