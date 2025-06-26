@@ -3,8 +3,9 @@ import os
 import mimetypes
 from urllib.parse import quote, unquote
 import string
-from ctypes import windll
-
+import platform
+import string
+import os
 app = Flask(__name__)
 
 # Video file extensions
@@ -32,15 +33,28 @@ def get_directory_contents(path):
     except PermissionError:
         return [], []
 
-def get_windows_drives():
-    """Return a list of available drive letters (Windows only)."""
-    drives = []
-    bitmask = windll.kernel32.GetLogicalDrives()
-    for letter in string.ascii_uppercase:
-        if bitmask & 1:
-            drives.append(f'{letter}:\\')
-        bitmask >>= 1
-    return drives
+def get_available_drives():
+    """Return a list of available drives or mount points depending on OS."""
+    if platform.system() == 'Windows':
+        from ctypes import windll
+        drives = []
+        bitmask = windll.kernel32.GetLogicalDrives()
+        for letter in string.ascii_uppercase:
+            if bitmask & 1:
+                drives.append(f'{letter}:\\')
+            bitmask >>= 1
+        return drives
+    else:
+        # For Linux: return list of mounted volumes under /mnt or /media
+        mounts = []
+        for base in ['/mnt', '/media']:
+            if os.path.exists(base):
+                for name in os.listdir(base):
+                    full_path = os.path.join(base, name)
+                    if os.path.ismount(full_path):
+                        mounts.append(full_path)
+        return mounts
+
 
 @app.route('/')
 def index():
