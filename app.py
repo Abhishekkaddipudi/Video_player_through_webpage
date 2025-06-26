@@ -1,10 +1,11 @@
-from flask import Flask, render_template_string, send_file, request
+from flask import Flask, render_template_string, send_file, request,url_for,redirect
 import os
 import mimetypes
 from urllib.parse import quote, unquote
 import string
-from ctypes import windll
-
+import platform
+import string
+import os
 app = Flask(__name__)
 
 # Video file extensions
@@ -32,20 +33,36 @@ def get_directory_contents(path):
     except PermissionError:
         return [], []
 
-def get_windows_drives():
-    """Return a list of available drive letters (Windows only)."""
-    drives = []
-    bitmask = windll.kernel32.GetLogicalDrives()
-    for letter in string.ascii_uppercase:
-        if bitmask & 1:
-            drives.append(f'{letter}:\\')
-        bitmask >>= 1
-    return drives
+import os
+import platform
+
+def get_available_drives():
+    """
+    On Windows: return list of available drive letters.
+    On non-Windows: return the current working directory.
+    """
+    if platform.system() == 'Windows':
+        from ctypes import windll
+        import string
+        drives = []
+        bitmask = windll.kernel32.GetLogicalDrives()
+        for letter in string.ascii_uppercase:
+            if bitmask & 1:
+                drives.append(f'{letter}:\\')
+            bitmask >>= 1
+        return drives
+
+
 
 @app.route('/')
 def index():
-    """List available drives."""
-    drives = get_windows_drives()
+    """Redirect to /browse if not Windows, else list drives."""
+    if platform.system() != 'Windows':
+        # Redirect to /browse/, which defaults to os.getcwd()
+        return redirect(url_for('browse_directory'))
+    
+    # Windows: Show drives
+    drives = get_available_drives()
     return render_template_string("""
     <h1>Available Drives</h1>
     <ul>
@@ -54,6 +71,7 @@ def index():
         {% endfor %}
     </ul>
     """, drives=drives)
+
 
 @app.route('/browse/', defaults={'subpath': ''})
 @app.route('/browse/<path:subpath>')
