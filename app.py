@@ -33,10 +33,13 @@ def get_directory_contents(path):
     except PermissionError:
         return [], []
 
+import psutil
+
 def get_available_drives():
-    """Return a list of available drives or mount points depending on OS."""
+    """Cross-platform: list Windows drives or Linux mount points."""
     if platform.system() == 'Windows':
         from ctypes import windll
+        import string
         drives = []
         bitmask = windll.kernel32.GetLogicalDrives()
         for letter in string.ascii_uppercase:
@@ -45,15 +48,8 @@ def get_available_drives():
             bitmask >>= 1
         return drives
     else:
-        # For Linux: return list of mounted volumes under /mnt or /media
-        mounts = []
-        for base in ['/mnt', '/media']:
-            if os.path.exists(base):
-                for name in os.listdir(base):
-                    full_path = os.path.join(base, name)
-                    if os.path.ismount(full_path):
-                        mounts.append(full_path)
-        return mounts
+        return [p.mountpoint for p in psutil.disk_partitions()]
+
 
 
 @app.route('/')
