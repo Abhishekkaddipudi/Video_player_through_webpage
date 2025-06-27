@@ -288,8 +288,10 @@ def browse_directory(subpath=''):
                 videoPlayer.scrollIntoView({ behavior: 'smooth' });
             }
            
-            const videoList = [{% for video in videos %}'{{ video }}',{% endfor %}];
+           
+            const videoList = {{ videos|tojson }};
             let currentVideoIndex = -1;
+
 
             function navigateToFolder(folderName) {
                 const currentPath = '{{ subpath }}';
